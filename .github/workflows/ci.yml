@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1) Build image and load it locally
+      # 1) Build image and load it locally for verification
       - name: Build (load for verification)
         uses: docker/build-push-action@v6
         with:
@@ -20,44 +20,32 @@ jobs:
           load: true
           tags: ${{ env.IMAGE }}:verify
 
-      # 2) Start container and publish host:80 -> container:8080
+      # 2) Start container and wait until it's serving on host:80
       - name: Start container on port 80
         run: |
-          echo "RAW:"
-          curl -sv http://localhost/ 2>&1 | sed -n 's/^< //p'
           set -euo pipefail
           docker run -d --rm --name app -p 80:8080 ${{ env.IMAGE }}:verify
-          # wait until the app responds on http://localhost/ (port 80)
           for i in {1..30}; do
-            if curl -fsS http://localhost/ >/dev/null; then
-              echo "App is up on port 80"
-              break
-            fi
-            sleep 1
+            curl -fsS http://localhost/ >/dev/null && break || sleep 1
           done
-          # assert it really is up (fails the step if not)
+          # assert it's up
           curl -fsS http://localhost/ >/dev/null
 
-      # 3) Verify (explicitly tell it to use port 80)
+      # (Optional but helpful) Show exactly what the verifier will see
+      - name: Show raw JSON on port 80
+        run: |
+          echo "---- RAW response ----"
+          curl -s http://localhost/ ; echo
+
+      # 3) Verify with Liatrio's action (defaults to port 80)
       - name: Apprentice verification
         uses: liatrio/github-actions/apprentice-action@master
-
-      # Print helpful info only if the verification fails
-      - name: Debug on failure
-        if: failure()
-        run: |
-          echo "----- docker ps -----"
-          docker ps -a || true
-          echo "----- container logs -----"
-          docker logs app || true
-          echo "----- curl localhost (raw) -----"
-          curl -v http://localhost/ || true
 
       - name: Stop container
         if: always()
         run: docker rm -f app
 
-      # 4) Push to Docker Hub with unique tags
+      # 4) Log in and push uniquely tagged images to Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:

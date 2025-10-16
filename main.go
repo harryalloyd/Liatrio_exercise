@@ -9,17 +9,17 @@ type Payload struct {
 }
 
 func root(c *fiber.Ctx) error {
-	p := Payload{
-		Message:   "My name is Harrison Lloyd",
-		Timestamp: time.Now().UnixMilli(), // milliseconds since epoch
+	resp := Payload{
+		Message: "My name is Harrison Lloyd",
+		Timestamp: time.Now().UnixMilli(), 
 	}
-	b, _ := json.Marshal(p) // Marshal is minified by default (no spaces/newlines)
+	b, _ := json.Marshal(resp) 
 	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	return c.Send(b)
 }
 
 func main() {
 	app := fiber.New()
-	app.Get("/", root) // instance of a Fiber application
+	app.Get("/", root) 
 	app.Listen(":8080")
 }
