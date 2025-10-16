@@ -23,6 +23,8 @@ jobs:
       # 2) Start container and publish host:80 -> container:8080
       - name: Start container on port 80
         run: |
+          echo "RAW:"
+          curl -sv http://localhost/ 2>&1 | sed -n 's/^< //p'
           set -euo pipefail
           docker run -d --rm --name app -p 80:8080 ${{ env.IMAGE }}:verify
           # wait until the app responds on http://localhost/ (port 80)
