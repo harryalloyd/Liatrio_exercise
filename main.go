@@ -9,7 +9,6 @@ type Payload struct {
 
 func main() {
 	app := fiber.New()
-
 	app.Get("/", func(c *fiber.Ctx) error {
 		p := Payload{
 			Message:   "My name is Harrison Lloyd",
