@@ -13,7 +13,7 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		p := Payload{
 			Message:   "My name is Harrison Lloyd",
-			Timestamp: time.Now().Unix(), 
+			Timestamp: time.Now().UnixMilli(), 
 		}
 		return c.JSON(p) 
 	})
