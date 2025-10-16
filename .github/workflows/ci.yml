@@ -3,19 +3,44 @@ on:
   push:
     branches: ["main"]
 
+env:
+  IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/liatrio-exercise
+
 jobs:
-  docker:
+  build-verify-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+
+      # 1) Build image and load it locally
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}:verify
+
+      # 2) Run container so the verifier can reach http://localhost:80
+      - run: |
+          docker run -d --rm --name app -p 80:8080 ${{ env.IMAGE }}:verify
+          for i in {1..20}; do curl -fsS http://localhost/ && break || sleep 1; done
+
+      # 3) Verify (this is the step from the screenshot)
+      - uses: liatrio/github-actions/apprentice-action@master
+
+      - if: always()
+        run: docker rm -f app
+
+      # 4) Log in and push uniquely tagged images
+      - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push :latest
-        uses: docker/build-push-action@v6
+
+      - uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/liatrio-exercise:latest
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:run-${{ github.run_number }}
+            ${{ env.IMAGE }}:${{ github.sha }}
