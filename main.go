@@ -5,7 +5,7 @@ import "time"
 func root(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": "My name is Harrison Lloyd",
-		"timestamp": time.Now().Unix(), //using unix to keep it as an int
+		"timestamp": time.Now().UnixMilli(), 
 	})
 }
 
