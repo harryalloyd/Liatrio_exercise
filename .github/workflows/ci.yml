@@ -23,20 +23,11 @@ jobs:
       # 2) Run the container and expose app port 8080 on host port 80 (the verifier expects :80)
       - name: Start container on port 80
         run: |
-          set -euo pipefail
           docker run -d --rm --name app -p 80:8080 ${{ env.IMAGE }}:verify
-          # wait until the app is up
           for i in {1..30}; do curl -fsS http://localhost/ >/dev/null && break || sleep 1; done
-          # assert it's reachable
           curl -fsS http://localhost/ >/dev/null
 
-      # (Optional) Show what the verifier will see
-      - name: Show raw JSON on port 80
-        run: |
-          echo "---- RAW response ----"
-          curl -s http://localhost/ ; echo
-
-      # 3) Verify using a known-good commit of the Liatrio action (before the broken minified test)
+      # 3) Verify using a known-good commit of the Liatrio action
       - name: Apprentice verification
         uses: liatrio/github-actions/apprentice-action@0b41561cca6822cc8d880fe0e49e7807a41fdf91
 
@@ -59,4 +50,3 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:run-${{ github.run_number }}
-            ${{ env.IMAGE }}:${{ github.sha }}
