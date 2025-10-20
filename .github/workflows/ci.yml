@@ -4,13 +4,14 @@ on:
     branches: ["main"]
 
 env:
-  IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/liatrio-exercise
+  IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/liatrio-exercise # Docker Hub repo name we build/push to
+  TAG: run-${{ github.run_number }}   # Unique image tag per workflow run
 
 jobs:
   build-verify-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 # grab the repo code
 
       # 1) Build the image and load it locally so we can run tests against it
       - name: Build (load for verification)
@@ -20,22 +21,22 @@ jobs:
           load: true
           tags: ${{ env.IMAGE }}:verify
 
-      # 2) Run the container and expose app port 8080 on host port 80 (the verifier expects :80)
+      # 2) Start the container on host:80 (mapped to the app's 8080) so the verifier can hit http://localhost/
       - name: Start container on port 80
         run: |
           docker run -d --rm --name app -p 80:8080 ${{ env.IMAGE }}:verify
           for i in {1..30}; do curl -fsS http://localhost/ >/dev/null && break || sleep 1; done
           curl -fsS http://localhost/ >/dev/null
 
-      # 3) Verify using a known-good commit of the Liatrio action
+      # 3) Run Liatrio's tests (they default to hitting http://localhost:80)
       - name: Apprentice verification
         uses: liatrio/github-actions/apprentice-action@0b41561cca6822cc8d880fe0e49e7807a41fdf91
 
-      - name: Stop container
+      - name: Stop container #Always stop the container even if tests fail
         if: always()
         run: docker rm -f app
 
-      # 4) Log in and push uniquely tagged images to Docker Hub
+      # 4) Log in and push two tags to Docker Hub: :latest and our unique run tag
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -49,4 +50,26 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:run-${{ github.run_number }}
+            ${{ env.IMAGE }}:${{ env.TAG }}
+
+  deploy: # only deploy if build+verify+push succeeded
+    needs: build-verify-push
+    runs-on: ubuntu-latest
+    steps:
+    # Authenticate to Google Cloud using the service account JSON in secrets
+      - name: Auth to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ vars.CLOUD_RUN_SERVICE }} \
+            --image="${{ env.IMAGE }}:${{ env.TAG }}" \
+            --region="${{ vars.GCP_REGION }}" \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --platform=managed \
+            --allow-unauthenticated
