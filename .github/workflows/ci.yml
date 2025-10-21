@@ -32,7 +32,7 @@ jobs:
       - uses: liatrio/github-actions/apprentice-action@0b41561cca6822cc8d880fe0e49e7807a41fdf91
 
       - name: Stop container # Clean up the test container even if tests fail
-      - if: always()
+        if: always()
         run: docker rm -f app
 
       # 4) Log in and push two tags to Docker Hub: :latest and our unique run tag
@@ -47,7 +47,7 @@ jobs:
         with:
           push: true # Actually push to the registry
           tags: | # Publish two tags: 1) latest, newest build 2) exact build for this run, unique
-            ${{ env.IMAGE }}:latest 1) 
+            ${{ env.IMAGE }}:latest 
             ${{ env.IMAGE }}:${{ env.TAG }}
 
   deploy: # deploy to Cloud Run (after build passes)
