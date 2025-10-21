@@ -17,6 +17,6 @@ func showInfo(c *fiber.Ctx) error {
 
 func main() {
 	app:=fiber.New() // Creates a new Fiber web application
-	app.Get("/", showInfo) // Registers the showInfo handler for HTTP GET requests on "/"
+	app.Get("/", showInfo) // Registers the route handler for HTTP GET requests on "/"
 	app.Listen(":8080") // Starts the HTTP server on port 8080
 }
