@@ -10,7 +10,7 @@ import (
 func showInfo(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{ 
 		"message": "My name is Harrison Lloyd",
-		"timestamp": time.Now().UnixMilli(), //Returns 
+		"timestamp": time.Now().UnixMilli(), //Returns the current time in milliseconds
 		"deployed_at": time.Now().Format(time.RFC3339), //Returns the year–month–day and hours-minutes-seconds 
 	})
 }
