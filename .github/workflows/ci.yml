@@ -65,7 +65,7 @@ jobs:
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Deploy to Cloud Run
+      - name: Deploy to Cloud Run #extra credit portion
         run: |
           gcloud run deploy ${{ vars.CLOUD_RUN_SERVICE }} \
             --image="${{ env.IMAGE }}:${{ env.TAG }}" \
