@@ -11,6 +11,7 @@ RUN go mod download
 # Copy the rest of the source code into the build workspace because these are more likely to change (main.go)
 COPY . .
 # Compile a single self contained binary named "main"
+# Go compiler won't attempt to link any C libraries (zero dependencies)
 RUN CGO_ENABLED=0 go build -o main
 
 

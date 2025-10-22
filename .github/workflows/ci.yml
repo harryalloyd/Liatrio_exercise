@@ -8,14 +8,14 @@ env:
   TAG: run-${{ github.run_number }}   # Unique image tag per workflow run
 
 jobs:
-  build-verify-push: # build, test locally, then push
+  build-verify-push: # build, test locally, then push to docker hub
     runs-on: ubuntu-latest # Use GitHub’s Ubuntu runner
     steps:
       - uses: actions/checkout@v4  # Pull the repo code onto the runner
 
       # 1) Build the image and load it locally so we can run tests against it
       - name: Build (load for verification)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v6 #run docker's pre made tool for building images
         with:
           load: true # Load the image into Docker on this VM
           tags: ${{ env.IMAGE }}:verify #Tag it :verify for the next step
