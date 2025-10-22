@@ -1,5 +1,5 @@
-# Use a Go-Alpine image to compile the app. Named this stage build
-FROM golang:1.25-alpine AS stage1
+# Use a Go-Alpine image to compile the app. Named this stage builder
+FROM golang:1.25-alpine AS builder
 # Run all following commands from /app inside this stage
 WORKDIR /app    
 
@@ -13,12 +13,13 @@ COPY . .
 # Compile a single self contained binary named "main"
 RUN CGO_ENABLED=0 go build -o main
 
+
 # Start a runtime image
 FROM alpine:3.20
 # Agin, run all following commands from /app inside this stage
 WORKDIR /app
-# Copy the compiled binary from the build stage into this image
-COPY --from=stage1 /app/main .
+# Copy the compiled binary from the builder stage into this image
+COPY --from=builder /app/main .
 # app listens on port 8080
 EXPOSE 8080
 # Run the compiled program when the container starts (docker run ...)
