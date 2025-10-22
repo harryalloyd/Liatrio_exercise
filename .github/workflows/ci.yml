@@ -36,7 +36,7 @@ jobs:
         run: docker rm -f app
 
       # 4) Log in and push two tags to Docker Hub: :latest and our unique run tag
-      - name: Login to Docker Hub
+      - name: Login to Docker Hub #forcefully stops and removes the test container named app
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }} #Docker Hub username (from repo secrets)
@@ -45,7 +45,7 @@ jobs:
       - name: Build and push (latest + unique) # Build again and push to Docker Hub
         uses: docker/build-push-action@v6
         with:
-          push: true # Actually push to the registry
+          push: true # Actually push to docker hub after building
           tags: | # Publish two tags: 1) latest, newest build 2) exact build for this run, unique
             ${{ env.IMAGE }}:latest 
             ${{ env.IMAGE }}:${{ env.TAG }}
